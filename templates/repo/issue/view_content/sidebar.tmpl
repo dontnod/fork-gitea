@@ -97,9 +97,9 @@
 				</div>
 			</div>
 			{{if and (or .HasIssuesOrPullsWritePermission .IsIssuePoster) (not .HasMerged) (not .Issue.IsClosed) (not .IsPullWorkInProgress)}}
-				<div class="toggle-wip" data-title="{{.Issue.Title}}" data-wip-prefix="{{(index .PullRequestWorkInProgressPrefixes 0| Escape)}}" data-update-url="{{.Issue.Link}}/title">
+				<div class="toggle-wip" data-title="{{.Issue.Title}}" data-wip-prefix="{{if .PullRequestWorkInProgressPrefixes}}{{(index .PullRequestWorkInProgressPrefixes 0| Escape)}}{{end}}" data-update-url="{{.Issue.Link}}/title">
 					<a class="muted">
-						{{.locale.Tr "repo.pulls.still_in_progress"}} {{.locale.Tr "repo.pulls.add_prefix" (index .PullRequestWorkInProgressPrefixes 0| Escape) | Safe}}
+						{{.locale.Tr "repo.pulls.still_in_progress"}} {{if .PullRequestWorkInProgressPrefixes}}{{.locale.Tr "repo.pulls.add_prefix" (index .PullRequestWorkInProgressPrefixes 0| Escape) | Safe}}{{end}}
 					</a>
 				</div>
 			{{end}}

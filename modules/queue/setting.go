@@ -13,6 +13,52 @@ import (
 	"code.gitea.io/gitea/modules/setting"
 )
 
+// UniqueQueueName represents an expected name for an UniqueQueue
+type UniqueQueueName string
+
+// list of all expected UniqueQueues
+const (
+	CodeIndexerQueueName     UniqueQueueName = "code_indexer"
+	RepoStatsUpdateQueueName UniqueQueueName = "repo_stats_update"
+	MirrorQueueName          UniqueQueueName = "mirror"
+	PRPatchQueueName         UniqueQueueName = "pr_patch_checker"
+	RepoArchiveQueueName     UniqueQueueName = "repo-archive"
+	PrAutoMergeQueueName     UniqueQueueName = "pr_auto_merge"
+	WebHookQueueName         UniqueQueueName = "webhook_sender"
+)
+
+// KnownUniqueQueueNames represents the list of expected unique queues
+var KnownUniqueQueueNames = []UniqueQueueName{
+	CodeIndexerQueueName,
+	RepoStatsUpdateQueueName,
+	MirrorQueueName,
+	PRPatchQueueName,
+	RepoArchiveQueueName,
+	PrAutoMergeQueueName,
+	WebHookQueueName,
+}
+
+// QueueName represents an expected name for Queue
+type QueueName string
+
+// list of all expected Queues
+const (
+	IssueIndexerQueueName QueueName = "issue_indexer"
+	NotificationQueueName QueueName = "notification-service"
+	MailerQueueName       QueueName = "mail"
+	PushUpdateQueueName   QueueName = "push_update"
+	TaskQueueName         QueueName = "task"
+)
+
+// KnownQueueNames represents the list of expected queues
+var KnownQueueNames = []QueueName{
+	IssueIndexerQueueName,
+	NotificationQueueName,
+	MailerQueueName,
+	PushUpdateQueueName,
+	TaskQueueName,
+}
+
 func validType(t string) (Type, error) {
 	if len(t) == 0 {
 		return PersistableChannelQueueType, nil
@@ -37,7 +83,18 @@ func getQueueSettings(name string) (setting.QueueSettings, []byte) {
 }
 
 // CreateQueue for name with provided handler and exemplar
-func CreateQueue(name string, handle HandlerFunc, exemplar interface{}) Queue {
+func CreateQueue(name QueueName, handle HandlerFunc, exemplar interface{}) Queue {
+	found := false
+	for _, expected := range KnownQueueNames {
+		if name == expected {
+			found = true
+			break
+		}
+	}
+	if !found {
+		log.Warn("%s is not an expected name for an Queue", name)
+	}
+
 	q, cfg := getQueueSettings(string(name))
 	if len(cfg) == 0 {
 		return nil
@@ -79,7 +136,18 @@ func CreateQueue(name string, handle HandlerFunc, exemplar interface{}) Queue {
 }
 
 // CreateUniqueQueue for name with provided handler and exemplar
-func CreateUniqueQueue(name string, handle HandlerFunc, exemplar interface{}) UniqueQueue {
+func CreateUniqueQueue(name UniqueQueueName, handle HandlerFunc, exemplar interface{}) UniqueQueue {
+	found := false
+	for _, expected := range KnownUniqueQueueNames {
+		if name == expected {
+			found = true
+			break
+		}
+	}
+	if !found {
+		log.Warn("%s is not an expected name for an UniqueQueue", name)
+	}
+
 	q, cfg := getQueueSettings(string(name))
 	if len(cfg) == 0 {
 		return nil

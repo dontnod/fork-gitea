@@ -372,10 +372,10 @@ func CheckPrsForBaseBranch(baseRepo *repo_model.Repository, baseBranchName strin
 
 // Init runs the task queue to test all the checking status pull requests
 func Init() error {
-	prPatchCheckerQueue = queue.CreateUniqueQueue("pr_patch_checker", handle, "")
+	prPatchCheckerQueue = queue.CreateUniqueQueue(queue.PRPatchQueueName, handle, "")
 
 	if prPatchCheckerQueue == nil {
-		return fmt.Errorf("Unable to create pr_patch_checker Queue")
+		return fmt.Errorf("unable to create pr_patch_checker Queue")
 	}
 
 	go graceful.GetManager().RunWithShutdownFns(prPatchCheckerQueue.Run)

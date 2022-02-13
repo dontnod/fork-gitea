@@ -315,7 +315,7 @@ func Init() error {
 		return nil
 	}
 
-	archiverQueue = queue.CreateUniqueQueue("repo-archive", handler, new(ArchiveRequest))
+	archiverQueue = queue.CreateUniqueQueue(queue.RepoArchiveQueueName, handler, new(ArchiveRequest))
 	if archiverQueue == nil {
 		return errors.New("unable to create repo archiver queue")
 	}

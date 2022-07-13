@@ -306,7 +306,7 @@ func checkConflicts(ctx context.Context, pr *issues_model.PullRequest, gitRepo *
 			log.Debug("Unable to get base tree for PR[%d] %s/%s#%d. Error: %v", pr.ID, pr.BaseRepo.OwnerName, pr.BaseRepo.Name, pr.Index, err)
 			return false, err
 		}
-		pr.Status = models.PullRequestStatusMergeable
+		pr.Status = issues_model.PullRequestStatusMergeable
 		pr.ConflictedFiles = []string{}
 
 		if treeHash == baseTree.ID.String() {

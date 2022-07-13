@@ -23,8 +23,8 @@ const (
 	MirrorQueueName          UniqueQueueName = "mirror"
 	PRPatchQueueName         UniqueQueueName = "pr_patch_checker"
 	RepoArchiveQueueName     UniqueQueueName = "repo-archive"
-	PrAutoMergeQueueName     UniqueQueueName = "pr_auto_merge"
-	WebHookQueueName         UniqueQueueName = "webhook_sender"
+	PRAutoMergeQueueName     UniqueQueueName = "pr_auto_merge"
+	WebhookDeliveryQueueName UniqueQueueName = "webhook_sender"
 )
 
 // KnownUniqueQueueNames represents the list of expected unique queues
@@ -34,8 +34,8 @@ var KnownUniqueQueueNames = []UniqueQueueName{
 	MirrorQueueName,
 	PRPatchQueueName,
 	RepoArchiveQueueName,
-	PrAutoMergeQueueName,
-	WebHookQueueName,
+	PRAutoMergeQueueName,
+	WebhookDeliveryQueueName,
 }
 
 // QueueName represents an expected name for Queue

@@ -473,17 +473,18 @@ func NewCommitFileStatus() *CommitFileStatus {
 
 func parseCommitFileStatus(fileStatus *CommitFileStatus, stdout io.Reader) {
 	rd := bufio.NewReader(stdout)
-	peek, err := rd.Peek(1)
-	if err != nil {
-		if err != io.EOF {
-			log.Error("Unexpected error whilst reading from git log --name-status. Error: %v", err)
-		}
-		return
-	}
-	if peek[0] == '\n' || peek[0] == '\x00' {
-		_, _ = rd.Discard(1)
-	}
 	for {
+		// In case of merge commits, Git will add a separator between each
+		peek, err := rd.Peek(1)
+		if err != nil {
+			if err != io.EOF {
+				log.Error("Unexpected error whilst reading from git log --name-status. Error: %v", err)
+			}
+			return
+		}
+		if peek[0] == '\n' || peek[0] == '\x00' {
+			_, _ = rd.Discard(1)
+		}
 		modifier, err := rd.ReadSlice('\x00')
 		if err != nil {
 			if err != io.EOF {
@@ -521,7 +522,7 @@ func GetCommitFileStatus(ctx context.Context, repoPath, commitID string) (*Commi
 	}()
 
 	stderr := new(bytes.Buffer)
-	err := NewCommand(ctx, "log", "--name-status", "-c", "--pretty=format:", "--parents", "--no-renames", "-z", "-1").AddDynamicArguments(commitID).Run(&RunOpts{
+	err := NewCommand(ctx, "log", "--name-status", "-m", "--pretty=format:", "--parents", "--no-renames", "-z", "-1").AddDynamicArguments(commitID).Run(&RunOpts{
 		Dir:    repoPath,
 		Stdout: w,
 		Stderr: stderr,

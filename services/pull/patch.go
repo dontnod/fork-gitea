@@ -296,12 +296,14 @@ func checkConflicts(ctx context.Context, pr *issues_model.PullRequest, gitRepo *
 		var treeHash string
 		treeHash, _, err = git.NewCommand(ctx, "write-tree").RunStdString(&git.RunOpts{Dir: tmpBasePath})
 		if err != nil {
+			log.Debug("Unable to write unconflicted tree for PR[%d] %s/%s#%d. Error: %v", pr.ID, pr.BaseRepo.OwnerName, pr.BaseRepo.Name, pr.Index, err)
 			lsfiles, _, _ := git.NewCommand(ctx, "ls-files", "-u").RunStdString(&git.RunOpts{Dir: tmpBasePath})
 			return false, fmt.Errorf("unable to write unconflicted tree: %w\n`git ls-files -u`:\n%s", err, lsfiles)
 		}
 		treeHash = strings.TrimSpace(treeHash)
 		baseTree, err := gitRepo.GetTree("base")
 		if err != nil {
+			log.Debug("Unable to get base tree for PR[%d] %s/%s#%d. Error: %v", pr.ID, pr.BaseRepo.OwnerName, pr.BaseRepo.Name, pr.Index, err)
 			return false, err
 		}
 		if treeHash == baseTree.ID.String() {

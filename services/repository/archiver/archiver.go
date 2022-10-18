@@ -317,7 +317,7 @@ func Init() error {
 
 	archiverQueue = queue.CreateUniqueQueue("repo-archive", handler, new(ArchiveRequest))
 	if archiverQueue == nil {
-		return errors.New("unable to create codes indexer queue")
+		return errors.New("unable to create repo archiver queue")
 	}
 
 	go graceful.GetManager().RunWithShutdownFns(archiverQueue.Run)

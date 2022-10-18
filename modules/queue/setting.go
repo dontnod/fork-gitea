@@ -38,7 +38,7 @@ func getQueueSettings(name string) (setting.QueueSettings, []byte) {
 
 // CreateQueue for name with provided handler and exemplar
 func CreateQueue(name string, handle HandlerFunc, exemplar interface{}) Queue {
-	q, cfg := getQueueSettings(name)
+	q, cfg := getQueueSettings(string(name))
 	if len(cfg) == 0 {
 		return nil
 	}
@@ -58,7 +58,7 @@ func CreateQueue(name string, handle HandlerFunc, exemplar interface{}) Queue {
 			MaxAttempts: q.MaxAttempts,
 			Config:      cfg,
 			QueueLength: q.QueueLength,
-			Name:        name,
+			Name:        string(name),
 		}, exemplar)
 	}
 	if err != nil {
@@ -80,7 +80,7 @@ func CreateQueue(name string, handle HandlerFunc, exemplar interface{}) Queue {
 
 // CreateUniqueQueue for name with provided handler and exemplar
 func CreateUniqueQueue(name string, handle HandlerFunc, exemplar interface{}) UniqueQueue {
-	q, cfg := getQueueSettings(name)
+	q, cfg := getQueueSettings(string(name))
 	if len(cfg) == 0 {
 		return nil
 	}
@@ -107,6 +107,7 @@ func CreateUniqueQueue(name string, handle HandlerFunc, exemplar interface{}) Un
 			MaxAttempts: q.MaxAttempts,
 			Config:      cfg,
 			QueueLength: q.QueueLength,
+			Name:        string(name),
 		}, exemplar)
 	}
 	if err != nil {

@@ -470,6 +470,9 @@ func parseCommitFileStatus(fileStatus *CommitFileStatus, stdout io.Reader) {
 			}
 			return
 		}
+		if bytes.Compare(modifier, []byte("\x00")) == 0 {
+			continue
+		}
 		file, err := rd.ReadString('\x00')
 		if err != nil {
 			if err != io.EOF {

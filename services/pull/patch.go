@@ -62,6 +62,10 @@ func TestPatch(pr *issues_model.PullRequest) error {
 	ctx, _, finished := process.GetManager().AddContext(graceful.GetManager().HammerContext(), fmt.Sprintf("TestPatch: %s", pr))
 	defer finished()
 
+	if pr.IsWorkInProgress() {
+		return nil
+	}
+
 	// Clone base repo.
 	prCtx, cancel, err := createTemporaryRepoForPR(ctx, pr)
 	if err != nil {

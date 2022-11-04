@@ -59,6 +59,10 @@ var patchErrorSuffices = []string{
 
 // TestPatch will test whether a simple patch will apply
 func TestPatch(pr *issues_model.PullRequest) error {
+	if pr.IsWorkInProgress() {
+		return nil
+	}
+
 	ctx, _, finished := process.GetManager().AddContext(graceful.GetManager().HammerContext(), fmt.Sprintf("TestPatch: %s", pr))
 	defer finished()
 

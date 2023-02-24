@@ -39,8 +39,17 @@ func (repo *Repository) GetMergeBase(tmpRemote, base, head string) (string, stri
 	if tmpRemote != "origin" {
 		tmpBaseName := RemotePrefix + tmpRemote + "/tmp_" + base
 		// Fetch commit into a temporary branch in order to be able to handle commits and tags
-		_, _, err := NewCommand(repo.Ctx, "fetch", "--no-tags").AddDynamicArguments(tmpRemote).AddDashesAndList(base + ":" + tmpBaseName).RunStdString(&RunOpts{Dir: repo.Path})
-		if err == nil {
+		// --no-write-commit-graph: fetch will try to generate commit graph by default
+		// this process require a lock-file (objects/info/commit-graphs/commit-graph-chain.lock)
+		// and will make fetch return an error code if the file already exists
+
+		// Use RunStdString instead of Run to provide stderr in err object
+		_, _, err := NewCommand(repo.Ctx, "fetch", "--no-write-commit-graph", "--no-tags").
+			AddDynamicArguments(tmpRemote).AddDashesAndList(base + ":" + tmpBaseName).
+			RunStdString(&RunOpts{Dir: repo.Path})
+		if err != nil {
+			logger.Error("Fetched new remote for GetMergeBase %v", err)
+		} else {
 			base = tmpBaseName
 		}
 	}

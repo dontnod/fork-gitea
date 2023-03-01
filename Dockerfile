@@ -1,86 +1,40 @@
 # Build stage
-FROM docker.io/library/golang:1.21-alpine3.18 AS build-env
+FROM docker.io/library/golang:1.21-bookworm AS build-env
 
 ARG GOPROXY
 ENV GOPROXY ${GOPROXY:-direct}
 
-ARG GITEA_VERSION
-ARG TAGS="sqlite sqlite_unlock_notify"
-ENV TAGS "bindata timetzdata $TAGS"
+ARG TAGS=""
+ENV TAGS "bindata $TAGS"
 ARG CGO_EXTRA_CFLAGS
 
-# Build deps
-RUN apk --no-cache add \
-    build-base \
-    git \
-    nodejs \
-    npm \
-    && rm -rf /var/cache/apk/*
+#Build deps
+# RUN apk --no-cache add build-base git nodejs npm
+RUN apt-get update
+RUN apt-get --yes install --no-install-recommends git ca-certificates curl gnupg && apt-get --yes clean
+# nodejs in bullseye is too old
+# Use the version from the alpine version used by Gitea in their dockerfile
+RUN \
+    mkdir -p /etc/apt/keyrings && \
+    (curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg) && \
+    (echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_20.x nodistro main" | tee /etc/apt/sources.list.d/nodesource.list) && \
+    apt-get update && \
+    apt-get --yes install --no-install-recommends nodejs && \
+    apt-get --yes clean
 
-# Setup repo
-COPY . ${GOPATH}/src/code.gitea.io/gitea
-WORKDIR ${GOPATH}/src/code.gitea.io/gitea
+#Setup repo
+# <- COPY go.mod and go.sum files
+RUN mkdir /deps
+WORKDIR /deps
+COPY go.mod .
+COPY go.sum .
+RUN go mod download -x
 
-# Checkout version if set
-RUN if [ -n "${GITEA_VERSION}" ]; then git checkout "${GITEA_VERSION}"; fi \
- && make clean-all build
+COPY package-lock.json .
+COPY package.json .
+RUN npm install --global
 
-# Begin env-to-ini build
-RUN go build contrib/environment-to-ini/environment-to-ini.go
 
-# Copy local files
-COPY docker/root /tmp/local
+WORKDIR ${GOPATH}/src/gitea
 
-# Set permissions
-RUN chmod 755 /tmp/local/usr/bin/entrypoint \
-              /tmp/local/usr/local/bin/gitea \
-              /tmp/local/etc/s6/gitea/* \
-              /tmp/local/etc/s6/openssh/* \
-              /tmp/local/etc/s6/.s6-svscan/* \
-              /go/src/code.gitea.io/gitea/gitea \
-              /go/src/code.gitea.io/gitea/environment-to-ini
-RUN chmod 644 /go/src/code.gitea.io/gitea/contrib/autocompletion/bash_autocomplete
-
-FROM docker.io/library/alpine:3.18
-LABEL maintainer="maintainers@gitea.io"
-
-EXPOSE 22 3000
-
-RUN apk --no-cache add \
-    bash \
-    ca-certificates \
-    curl \
-    gettext \
-    git \
-    linux-pam \
-    openssh \
-    s6 \
-    sqlite \
-    su-exec \
-    gnupg \
-    && rm -rf /var/cache/apk/*
-
-RUN addgroup \
-    -S -g 1000 \
-    git && \
-  adduser \
-    -S -H -D \
-    -h /data/git \
-    -s /bin/bash \
-    -u 1000 \
-    -G git \
-    git && \
-  echo "git:*" | chpasswd -e
-
-ENV USER git
-ENV GITEA_CUSTOM /data/gitea
-
-VOLUME ["/data"]
-
-ENTRYPOINT ["/usr/bin/entrypoint"]
-CMD ["/bin/s6-svscan", "/etc/s6"]
-
-COPY --from=build-env /tmp/local /
-COPY --from=build-env /go/src/code.gitea.io/gitea/gitea /app/gitea/gitea
-COPY --from=build-env /go/src/code.gitea.io/gitea/environment-to-ini /usr/local/bin/environment-to-ini
-COPY --from=build-env /go/src/code.gitea.io/gitea/contrib/autocompletion/bash_autocomplete /etc/profile.d/gitea_bash_autocomplete.sh
+RUN git config --global --add safe.directory ${GOPATH}/src/gitea
